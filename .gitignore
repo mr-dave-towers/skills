@@ -26,6 +26,7 @@ target/
 vendor/
 *.min.js
 *.map
+*.tsbuildinfo
 
 # ==========================
 # TEST & COVERAGE NOISE
@@ -34,6 +35,7 @@ coverage/
 test-results/
 playwright-report/
 *.log
+npm-debug.log*
 logs/
 
 # ==========================
