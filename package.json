@@ -1,0 +1,58 @@
+{
+  "name": "@mr-dave-towers/skills",
+  "version": "1.0.0",
+  "description": "A reusable library of AI agent skills (SKILL.md) for opencode, Claude Code, and Codex.",
+  "keywords": [
+    "ai",
+    "agent",
+    "skills",
+    "skill-md",
+    "opencode",
+    "claude-code",
+    "codex",
+    "prompt-engineering"
+  ],
+  "license": "MIT",
+  "author": "David Torres",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "skills-validate": "./scripts/validate.mjs",
+    "skills-new": "./scripts/new-skill.mjs"
+  },
+  "exports": {
+    ".": "./scripts/index.mjs",
+    "./skills/*": "./skills/*/SKILL.md",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "skills",
+    "templates",
+    "scripts",
+    "README.md",
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "validate:strict": "node scripts/validate.mjs --strict",
+    "new": "node scripts/new-skill.mjs",
+    "test": "node --test \"scripts/test/*.test.mjs\"",
+    "check": "npm run validate:strict && npm test",
+    "prepublishOnly": "npm run check"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mr-dave-towers/skills.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mr-dave-towers/skills/issues"
+  },
+  "homepage": "https://github.com/mr-dave-towers/skills#readme",
+  "publishConfig": {
+    "access": "public"
+  }
+}
