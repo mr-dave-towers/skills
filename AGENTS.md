@@ -89,8 +89,9 @@ a skill exists on disk but is not in the README index, so do not skip it.
 | `templates/skill-template/` | Starting point for new skills. Not itself a skill.        |
 | `scripts/validate.mjs`    | Lints every `SKILL.md`. `npm run validate`.               |
 | `scripts/new-skill.mjs`   | Scaffolds a new skill. `npm run new -- <name>`.            |
+| `scripts/install-skills.mjs` | Installs skills into agent dirs (copy/symlink, per agent/scope). `node scripts/install-skills.mjs --help`. |
 | `scripts/lib/`            | Zero-dependency frontmatter parser + rule engine.          |
-| `scripts/test/`           | `node --test` suite for the parser and rules.              |
+| `scripts/test/`           | `node --test` suite for parser, rules, scaffolder, and installer. |
 | `.github/workflows/ci.yml`| Runs `npm run check` on every push and PR.                 |
 
 ## Frontmatter reference

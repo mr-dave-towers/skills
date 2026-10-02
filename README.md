@@ -39,53 +39,105 @@ and can be copied into any other project.
 
 ## Install
 
-### opencode
+There are three ways to make these skills available to your agent. The npm package
+is not yet published to the registry; use a git clone or a local `file:`/tarball
+install until v1.0.1 or later is on npm.
 
-Point opencode at this folder — it scans recursively for `**/SKILL.md`:
+### Option 1: Clone + install helper (recommended)
+
+The repo ships `skills-install`, which copies whole skill folders (including any
+`references/` assets) to the right location for your agent.
+
+```bash
+git clone https://github.com/mr-dave-towers/skills.git ~/github/skills
+cd /path/to/your/repo
+
+# Install all skills for opencode, project scope (default)
+node ~/github/skills/scripts/install-skills.mjs
+
+# Or use a symlink (local only, never commit symlinks)
+node ~/github/skills/scripts/install-skills.mjs --link
+
+# Install a subset for Claude Code, globally
+node ~/github/skills/scripts/install-skills.mjs --agent claude --scope global code-review frontend-design
+```
+
+Project scope writes to `.opencode/`, `.claude/`, or `.agents/` in the current
+repo. Global scope writes to `~/.config/opencode/`, `~/.claude/`, or
+`~/.agents/`. Pass `--list` to see what is installed and where.
+
+> [!WARNING]
+> **Never commit symlinks.** When you pass `--link`, git records the absolute
+> target path (e.g. `/home/you/github/skills/skills/code-review`) and that link
+> will be broken for every other machine. Either commit the copied folders
+> (drop `--link`) or add the destination folder (e.g. `.opencode/skills/`) to
+> your `.gitignore` if it's local-only.
+
+> [!NOTE]
+> **Copy the whole folder.** `code-review`, `frontend-design`, and
+> `wordpress-classic-theme` ship a `references/` directory referenced from
+> `SKILL.md`. Only copying `SKILL.md` will break the skill.
+
+> [!IMPORTANT]
+> **Skill names must be unique.** If the same skill name exists in multiple
+> discovery locations (global, project, or any `skills.paths`), the agent may load
+> an unexpected version. The `skills-install` helper warns if it detects a name
+> collision when installing.
+
+### Option 2: Point opencode to the library (zero files in your repo)
+
+If you only care about opencode, you can reference the cloned library via
+`skills.paths` in your config. This keeps your repo clean and loads every skill
+in that folder.
 
 ```jsonc
 // opencode.json
 {
   "$schema": "https://opencode.ai/config.json",
   "skills": {
-    "paths": ["/absolute/path/to/skills/skills"]
+    "paths": ["/home/you/github/skills/skills"]
   }
 }
 ```
 
-Or symlink the ones you want, so opencode's default discovery picks them up:
+`skills.paths` is an array of absolute paths to directories containing skill
+folders (`skills/<name>/SKILL.md`). opencode discovers them at startup. This is
+only supported by opencode currently; other agents require folders under their
+standard `skills/` directories (Option 1 or Option 3).
+
+### Option 3: Manually copy or symlink
+
+Symlink example (local-only):
 
 ```bash
 mkdir -p .opencode/skills
-ln -s /absolute/path/to/skills/skills/code-review .opencode/skills/code-review
+ln -s ~/github/skills/skills/code-review .opencode/skills/code-review
 ```
 
-Restart opencode afterwards — config and skills are read at startup, not hot-reloaded.
-
-### Claude Code
+Copy example (portable, can commit):
 
 ```bash
-mkdir -p ~/.claude/skills
-ln -s /absolute/path/to/skills/skills/code-review ~/.claude/skills/code-review
+mkdir -p .opencode/skills
+cp -r ~/github/skills/skills/code-review .opencode/skills/
+git add .opencode/skills && git commit -m "chore: add agent skills"
 ```
 
-### Codex / anything else
+Repeat for Claude Code (`.claude/skills/` or `~/.claude/skills/`) and Codex
+(`.agents/skills/` or `~/.agents/skills/`). See `node ~/github/skills/scripts/install-skills.mjs --help`
+for exact locations per agent and scope.
 
-Copy or symlink `skills/<name>/` into the agent's skills directory, or point its
-config at [`skills/`](./skills). The format is the open standard: YAML frontmatter
-with `name` + `description`, instructions in the body.
+### npm (package not published yet)
 
-### npx
-
-The package ships two bins. `npx` resolves package names, not bin names, so
-pass the package explicitly:
+The `skills` package is prepared for publishing but not yet
+available on npm. Once published, you'll be able to run:
 
 ```bash
-npx --package=@mr-dave-towers/skills skills-validate --strict
-npx --package=@mr-dave-towers/skills skills-new my-skill --description "Use when …"
+npx --package=david-torres-skills skills-install
+npx --package=david-torres-skills skills-validate --strict
+npx --package=david-torres-skills skills-new my-skill --description "Use when …"
 ```
 
-From a clone, use `npm run check` and `npm run new -- <name>` instead.
+Until then, use the local clone methods above.
 
 ## Use a skill
 
@@ -117,7 +169,8 @@ this repo live in [AGENTS.md](./AGENTS.md); the human-facing version is
 | `npm run validate` | Lint every `SKILL.md`. Warnings do not fail. |
 | `npm run validate:strict` | Same, with warnings as failures. What CI runs. |
 | `npm run new -- <name>` | Scaffold a skill from [`templates/skill-template/`](./templates/skill-template). |
-| `npm test` | `node --test` suite for the parser and rule engine. |
+| `node scripts/install-skills.mjs` | Install skills to agent dirs (copy/symlink, per agent and scope). See `--help`. |
+| `npm test` | `node --test` suite for the parser, rules, scaffolder, and installer. |
 | `npm run check` | `validate:strict` + `test`. Run this before every PR. |
 
 The scripts have zero runtime dependencies (Node ≥ 20, ESM).
@@ -125,7 +178,7 @@ The scripts have zero runtime dependencies (Node ≥ 20, ESM).
 ## Programmatic access
 
 ```js
-import { listSkills, getSkill } from "@mr-dave-towers/skills";
+import { listSkills, getSkill } from "david-torres-skills";
 
 const skills = await listSkills();
 const review = await getSkill("code-review", { includeFiles: true });

@@ -1,6 +1,6 @@
 {
-  "name": "@mr-dave-towers/skills",
-  "version": "1.0.0",
+  "name": "david-torres-skills",
+  "version": "1.0.3",
   "description": "A reusable library of AI agent skills (SKILL.md) for opencode, Claude Code, and Codex.",
   "keywords": [
     "ai",
@@ -20,7 +20,8 @@
   },
   "bin": {
     "skills-validate": "./scripts/validate.mjs",
-    "skills-new": "./scripts/new-skill.mjs"
+    "skills-new": "./scripts/new-skill.mjs",
+    "skills-install": "./scripts/install-skills.mjs"
   },
   "exports": {
     ".": "./scripts/index.mjs",
