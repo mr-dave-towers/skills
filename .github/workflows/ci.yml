@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm install --no-audit --no-fund
+
+      - name: Check (strict validate + tests)
+        run: npm run check
+
+      - name: Pack check
+        run: npm pack --dry-run
+
+  skills-changed:
+    name: Report changed skills
+    runs-on: ubuntu-latest
+    needs: validate
+    if: always() && github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: List touched skills
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          git diff --name-only "$BASE" -- skills/ \
+            | cut -d/ -f1-2 \
+            | sort -u \
+            | tee /tmp/changed.txt
+
+      - name: Validate only the touched skills
+        run: |
+          if [ ! -s /tmp/changed.txt ]; then
+            echo "No skill files changed."
+            exit 0
+          fi
+          FOLDERS=""
+          while read -r name; do
+            if [ -f "skills/$name/SKILL.md" ]; then
+              FOLDERS="$FOLDERS $name"
+            else
+              echo "Skipping $name: removed in this PR."
+            fi
+          done <<< "$(cut -d/ -f2 /tmp/changed.txt | sort -u)"
+
+          if [ -z "$FOLDERS" ]; then
+            echo "No surviving skill folders to validate."
+            exit 0
+          fi
+          echo "Validating:$FOLDERS"
+          # shellcheck disable=SC2086
+          node scripts/validate.mjs $FOLDERS
